@@ -449,8 +449,8 @@ def addItemWindow():
      storeTypeLabel = Label(window,text="Stored Type")
      storeTypeLabel.grid(row=2, column=3, pady=(10,0))
 
-     storeEntry=OptionMenu(window, addstoredVar, storeOptions)
-     storeEntry.grid(row=2,column=4,pady=(10,0))
+     storeEntry=OptionMenu(window, addstoredVar,*storeOptions)
+     storeEntry.grid(row=2,column=4,padx=(10,0), pady=(10,0))
 
      AddItemButton = Button(window, text="Add Item", width=20, height=2, command=lambda:addItem())
      AddItemButton.grid(row=3, column=3,pady=(10,0))
