@@ -8,6 +8,8 @@ except ImportError:
     from tkinter import messagebox
     from tkinter import filedialog
     import pymysql
+    import os
+    import sys
 
 window  = Tk()
 window.geometry("1000x800")
@@ -22,14 +24,14 @@ def quantityFieldListener(a,b,c):
         try:
             quantity=float(quantity)
             cost = quantity*itemRate
-            quantityVar.set("%.2f"%quantity)
-            costVar.set("%.2f"%cost)
+            quantityVar.set("%d"%quantity)
+            costVar.set("%d"%cost)
         except ValueError:
             quantity=quantity[:-1]
             quantityVar.set(quantity)
     else:
         quantity=0
-        quantityVar.set("%.2f"%quantity)
+        quantityVar.set("%d"%quantity)
 def costFieldListener(a,b,c):
     global quantityVar
     global costVar
@@ -39,7 +41,7 @@ def costFieldListener(a,b,c):
         try:
             cost = float(cost)
             quantity=cost/itemRate
-            quantityVar.set("%.2f"%quantity)
+            quantityVar.set("%d"%quantity)
             costVar.set(cost)
         except ValueError:
             cost=cost[:-1]
@@ -81,7 +83,7 @@ addstoredVar=StringVar()
 addstoredVar.set(storeOptions[0])
 
 itemLists = list()
-totalCost = 0.0
+totalCost = 0
 totalCostVar=StringVar()
 totalCostVar.set("Total Cost = {}".format(totalCost))
 
@@ -96,6 +98,9 @@ def generate_bill():
     global itemLists
     global totalCost
     global totalCostVar
+
+    
+
     itemName = itemVariable.get()
     quantity = quantityVar.get()
     cost = costVar.get()
@@ -153,7 +158,7 @@ def getItemLists():
     updateTV.bind("<Double-1>",onDoubleClick)
 
     conn.close()
-
+#========= function to print the bill======
 def print_bill():
     global itemLists
     global totalCost
@@ -183,11 +188,18 @@ def print_bill():
     totalCost=0.0
     updateListView()
     totalCostVar.set("Total Cost = {}".format(totalCost))
+
+def restart():
+    python = sys.executable
+    os.execl(python,python, * sys.argv)
+    loginWindow()
     
 #========= function to logout======
 def logout():
-    remove_all_widgets()
-    loginWindow()
+    if __name__ == "__main__":
+        restart()
+    # remove_all_widgets()
+    
 
 def moveToUpdate():
     remove_all_widgets()
@@ -218,7 +230,7 @@ def readAllData():
         options.append(row['nameId'])
         rateDict[row['nameId']]=row['rate']
         itemVariable.set(options[0])
-        itemRate=int(rateDict[options[0]])
+        itemRate=rateDict[options[0]]
     conn.close()
     rateVar.set(itemRate)
     if count ==0:
@@ -269,20 +281,26 @@ def adminLogin():
     username = usernameVar.get()
     password = passwordVar.get()
 
-    conn = pymysql.connect(host="localhost", user="root", passwd="", db="billing")
-    cursor = conn.cursor()
-
-    query = "select * from users where username='{}' and password='{}'".format(username, password)
-    cursor.execute(query)
-    data = cursor.fetchall()
-    admin = False
-    for row in data:
-        admin = True
-    conn.close()
-    if admin:
-        readAllData()
+    if len(usernameVar.get()) == 0 and len(passwordVar.get()) == 0:
+        messagebox.showerror("Error", "Credentials needed to login")
+    elif len(usernameVar.get()) == 0:
+        messagebox.showerror("Error", "Username is needed to login")
+    elif len(passwordVar.get()) == 0:
+        messagebox.showerror("Error", "Password is needed to login")
     else:
-        messagebox.showerror("Invalid user", "Credetials entered are invalid")
+        conn = pymysql.connect(host="localhost", user="root", passwd="", db="billing")
+        cursor = conn.cursor()
+        query = "select * from users where username='{}' and password='{}'".format(username, password)
+        cursor.execute(query)
+        data = cursor.fetchall()
+        admin = False
+        for row in data:
+            admin = True
+        conn.close()
+        if admin:
+            readAllData()
+        else:
+            messagebox.showerror("Unkown User", "Credetials entered are invalid")
 
 def addItemListener():
      remove_all_widgets()
@@ -336,7 +354,7 @@ def updateItem():
 
 def loginWindow():
     titleLabel = Label(window,text="Sippers Billing System",font="Arial 40",fg="green")
-    titleLabel.grid(row = 0,column = 0,columnspan = 4,pady=(30,0))
+    titleLabel.grid(row = 0,column = 0,columnspan =4,padx=(200,0), pady=(30,0))
 
     loginLabel = Label(window,text = "Admin Login",font="Arial 40")
     loginLabel.grid(row = 1,column = 2,padx=(50,0),columnspan=2,pady = 10)
@@ -358,7 +376,7 @@ def loginWindow():
 
 def mainwindow():
      titleLabel = Label(window,text="Sippers Billing System",font="Arial 30",fg="green")
-     titleLabel.grid(row = 0,column = 0,columnspan =3,pady=(30,0))
+     titleLabel.grid(row = 0,column = 0,columnspan =3,padx=(200,0),pady=(30,0))
 
      addNewItem = Button(window, text="Add Item", width=15, height=2, command=lambda:addItemListener())
      addNewItem.grid(row=1, column=0, padx=(10,0),pady=(10,0))
@@ -392,8 +410,9 @@ def mainwindow():
      costLabel =Label(window, text="cost")
      costLabel.grid(row=3, column=2, padx=(10,0), pady=(10,0))
 
-     costEntry=Entry(window, textvariable=costVar)
+     costEntry=Entry(window, textvariable=costVar, state = 'disabled')
      costEntry.grid(row=3, column=3, padx=(10,0), pady=(10,0))
+    #  costEntry.configure(validate = 'key', validatecommand=(callback,"%P"))
 
      buttonBill = Button(window, text="Add to List", width=15, command=lambda:generate_bill())
      buttonBill.grid(row=3, column=4,padx=(5,0),pady=(10,0))
@@ -401,7 +420,7 @@ def mainwindow():
      billLabel=Label(window, text="Bills",font="Arial 25")
      billLabel.grid(row=4,column=2)
 
-     billsTV.grid(row=5, column=0, columnspan=5)
+     billsTV.grid(row=5, column=0, columnspan=5, padx=(50,0))
 
      scrollBar = Scrollbar(window, orient="vertical", command=billsTV.yview)
      scrollBar.grid(row=5, column=4, sticky="NSE")
@@ -426,7 +445,7 @@ def addItemWindow():
      backbutton = Button(window, text="Back", command=lambda:readAllData())
      backbutton.grid(row=0, column=1)
      titleLabel = Label(window,text="Sippers Billing System",width=30,font="Arial 40",fg="green")
-     titleLabel.grid(row = 0,column = 2,columnspan = 4,pady=(30,0))
+     titleLabel.grid(row = 0,column = 2,columnspan = 4,padx=(250,0),pady=(30,0))
 
      itemNameLabel = Label(window,text="Name")
      itemNameLabel.grid(row=1, column=1, pady=(10,0))
@@ -459,7 +478,7 @@ def updateItemWindow():
      backbutton = Button(window, text="Back", command=lambda:readAllData())
      backbutton.grid(row=0, column=1)
      titleLabel = Label(window,text="Sippers Billing System",width=30,font="Arial 40",fg="green")
-     titleLabel.grid(row = 0,column = 2,columnspan = 4,pady=(30,0))
+     titleLabel.grid(row = 0,column = 2,columnspan = 4,padx=(100,0),pady=(30,0))
 
      itemNameLabel = Label(window,text="Name")
      itemNameLabel.grid(row=1, column=1, pady=(10,0))
@@ -482,7 +501,7 @@ def updateItemWindow():
      storeTypeLabel = Label(window,text="Stored Type")
      storeTypeLabel.grid(row=2, column=3, pady=(10,0))
 
-     storeEntry=OptionMenu(window, addstoredVar, storeOptions)
+     storeEntry=OptionMenu(window, addstoredVar, *storeOptions)
      storeEntry.grid(row=2,column=4,pady=(10,0))
 
      AddItemButton = Button(window, text="Update Item", width=20, height=2, command=lambda:updateItem())
@@ -510,7 +529,7 @@ def viewAllBills():
      backbutton = Button(window, text="Back", command=lambda:readAllData())
      backbutton.grid(row=0, column=1)
      titleLabel = Label(window,text="Sippers Billing System",width=30,font="Arial 40",fg="green")
-     titleLabel.grid(row = 0,column = 2,columnspan = 4,pady=(30,0))
+     titleLabel.grid(row = 0,column = 2,columnspan = 4,padx=(200,0),pady=(30,0))
 
      billsTV.grid(row=1, column=0, columnspan=5)
 
