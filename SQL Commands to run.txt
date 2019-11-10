@@ -1,0 +1,11 @@
+// sql commands text file
+create database billing;
+
+create table users(username varchar(45),password varchar(45));
+
+insert into users(username,password)values();
+
+create table itemlist(nameId varchar(45),name varchar(45),rate varchar(45),type varchar(45),storetype varchar(45));
+
+create table bills(id int primary key not null auto_increment,name varchar(45),quantity varchar(45),rate varchar(45),cost varchar(45),time datetime default CURRENT_TIMESTAMP);
+
