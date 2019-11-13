@@ -1,3 +1,4 @@
 {
-    "editor.fontFamily": "'Noto Sans', 'monospace', monospace, 'Droid Sans Fallback'"
+    "editor.fontFamily": "'Noto Sans', 'monospace', monospace, 'Droid Sans Fallback'",
+    "editor.fontSize": 15
 }
